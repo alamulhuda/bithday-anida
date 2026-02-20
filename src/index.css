@@ -1461,6 +1461,10 @@ body {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+  .hero-dashboard {
+    padding: 3rem 2rem;
+  }
+
   .countdown-grid {
     gap: 1rem;
   }
@@ -1471,12 +1475,21 @@ body {
   }
 
   .countdown-value {
-    font-size: 2.4rem;
+    font-size: 2.2rem;
   }
 
   .countdown-label {
     font-size: 0.6rem;
     letter-spacing: 2px;
+  }
+
+  .countdown-page-subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+  }
+
+  .countdown-page-name {
+    font-size: clamp(2rem, 7vw, 4rem);
   }
 
   .wishes-grid {
@@ -1518,20 +1531,45 @@ body {
 }
 
 @media (max-width: 480px) {
+  .hero-dashboard {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .countdown-page-inner {
+    padding: 1.5rem 1rem;
+  }
+
   .countdown-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-    max-width: 260px;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    margin: 0 auto;
   }
 
   .countdown-item {
-    width: 100%;
-    height: 110px;
+    width: 68px;
+    height: 80px;
+    border-radius: 12px;
+  }
+
+  .countdown-value {
+    font-size: 1.5rem;
+  }
+
+  .countdown-label {
+    font-size: 0.5rem;
+    letter-spacing: 1px;
   }
 
   .hero-name {
     font-size: 2.2rem;
+  }
+
+  .countdown-page-name {
+    font-size: clamp(1.8rem, 8vw, 2.5rem);
+    margin-bottom: 0.5rem;
   }
 
   .wishes-grid {
