@@ -1,5 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
-
 const wishes = [
     {
         icon: '🌟',
@@ -24,33 +22,18 @@ const wishes = [
 ];
 
 export default function WishesSection() {
-    const sectionRef = useRef(null);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) setIsVisible(true);
-            },
-            { threshold: 0.15 }
-        );
-
-        if (sectionRef.current) observer.observe(sectionRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <section className="wishes-section" ref={sectionRef}>
+        <section className="wishes-section">
             <p className="section-label">✦ Doa & Harapan ✦</p>
-            <h2 className="section-title" style={{ marginBottom: '3rem' }}>
+            <h2 className="section-title" style={{ marginBottom: '2rem' }}>
                 Wishes For You
             </h2>
             <div className="wishes-grid">
                 {wishes.map((wish, i) => (
                     <div
                         key={i}
-                        className={`wish-card ${isVisible ? 'visible' : ''}`}
-                        style={{ transitionDelay: `${i * 0.15}s` }}
+                        className="wish-card visible"
+                        style={{ animationDelay: `${i * 0.15}s` }}
                     >
                         <div className="wish-icon">{wish.icon}</div>
                         <h3 className="wish-title">{wish.title}</h3>

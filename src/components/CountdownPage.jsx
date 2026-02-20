@@ -64,7 +64,15 @@ export default function CountdownPage({ targetDate }) {
 
                 <p className="countdown-page-subtitle">A Special Day Is Coming For</p>
                 <h1 className="countdown-page-name">
-                    <span className="gold-text">Wuwuh Anida Arifah</span>
+                    {'Wuwuh Anida Arifah'.split('').map((char, i) => (
+                        <span
+                            key={i}
+                            className={`name-letter ${char === ' ' ? 'name-space' : ''}`}
+                            style={{ animationDelay: `${0.8 + i * 0.05}s` }}
+                        >
+                            {char === ' ' ? '\u00A0' : char}
+                        </span>
+                    ))}
                 </h1>
                 <div className="hero-divider" />
 

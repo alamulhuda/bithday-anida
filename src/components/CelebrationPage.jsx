@@ -1,99 +1,82 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import HeroSection from './HeroSection';
 import BirthdayMessage from './BirthdayMessage';
 import WishesSection from './WishesSection';
 import Footer from './Footer';
+import MusicPlaylist from './MusicPlaylist';
+import GiftPage from './GiftPage';
 import Confetti from './Confetti';
 
-// Happy Birthday melody notes (frequency, duration)
-const HAPPY_BIRTHDAY_NOTES = [
-    // Hap-py Birth-day to you
-    [262, 0.3], [262, 0.15], [294, 0.45], [262, 0.45], [349, 0.45], [330, 0.9],
-    // Hap-py Birth-day to you
-    [262, 0.3], [262, 0.15], [294, 0.45], [262, 0.45], [392, 0.45], [349, 0.9],
-    // Hap-py Birth-day dear Wuwuh
-    [262, 0.3], [262, 0.15], [523, 0.45], [440, 0.45], [349, 0.45], [330, 0.45], [294, 0.9],
-    // Hap-py Birth-day to you
-    [466, 0.3], [466, 0.15], [440, 0.45], [349, 0.45], [392, 0.45], [349, 0.9],
-];
-
-function playHappyBirthday(audioCtx) {
-    const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.15;
-    gainNode.connect(audioCtx.destination);
-
-    let time = audioCtx.currentTime + 0.5;
-
-    HAPPY_BIRTHDAY_NOTES.forEach(([freq, dur]) => {
-        const osc = audioCtx.createOscillator();
-        const noteGain = audioCtx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-
-        // Envelope for natural sound
-        noteGain.gain.setValueAtTime(0, time);
-        noteGain.gain.linearRampToValueAtTime(0.4, time + 0.05);
-        noteGain.gain.exponentialRampToValueAtTime(0.01, time + dur - 0.05);
-
-        osc.connect(noteGain);
-        noteGain.connect(gainNode);
-
-        osc.start(time);
-        osc.stop(time + dur);
-        time += dur;
-    });
-
-    return time - audioCtx.currentTime;
-}
+const SLIDE_LABELS = ['Greeting', 'Playlist', 'Message', 'Wishes', 'Gift', 'Close'];
 
 export default function CelebrationPage() {
     const [entered, setEntered] = useState(false);
-    const [musicPlaying, setMusicPlaying] = useState(false);
-    const audioCtxRef = useRef(null);
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const touchStartRef = useRef(null);
+    const totalSlides = 6;
 
     const handleEnter = useCallback(() => {
         setEntered(true);
-
-        // Play music
-        try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtxRef.current = ctx;
-            playHappyBirthday(ctx);
-            setMusicPlaying(true);
-
-            // Loop the melody
-            const totalDuration = HAPPY_BIRTHDAY_NOTES.reduce((sum, [, d]) => sum + d, 0) + 0.5;
-            const loopInterval = setInterval(() => {
-                if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
-                    playHappyBirthday(audioCtxRef.current);
-                }
-            }, totalDuration * 1000 + 500);
-
-            // Stop after 3 loops
-            setTimeout(() => {
-                clearInterval(loopInterval);
-                setMusicPlaying(false);
-            }, totalDuration * 3 * 1000 + 2000);
-        } catch (e) {
-            console.log('Audio not supported');
-        }
     }, []);
 
-    const toggleMusic = useCallback(() => {
-        if (!audioCtxRef.current) return;
+    const goToSlide = useCallback((index) => {
+        if (isTransitioning || index === currentSlide) return;
+        if (index < 0 || index >= totalSlides) return;
+        setIsTransitioning(true);
+        setCurrentSlide(index);
+        setTimeout(() => setIsTransitioning(false), 700);
+    }, [currentSlide, isTransitioning]);
 
-        if (musicPlaying) {
-            audioCtxRef.current.suspend();
-            setMusicPlaying(false);
-        } else {
-            audioCtxRef.current.resume();
-            playHappyBirthday(audioCtxRef.current);
-            setMusicPlaying(true);
+    const nextSlide = useCallback(() => goToSlide(currentSlide + 1), [currentSlide, goToSlide]);
+    const prevSlide = useCallback(() => goToSlide(currentSlide - 1), [currentSlide, goToSlide]);
+
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKey = (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [nextSlide, prevSlide]);
+
+    // Mouse wheel navigation
+    useEffect(() => {
+        let wheelTimeout = null;
+        const handleWheel = (e) => {
+            if (wheelTimeout) return;
+            wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 800);
+            if (e.deltaY > 0) nextSlide();
+            else if (e.deltaY < 0) prevSlide();
+        };
+        window.addEventListener('wheel', handleWheel, { passive: true });
+        return () => window.removeEventListener('wheel', handleWheel);
+    }, [nextSlide, prevSlide]);
+
+    // Touch swipe navigation
+    const handleTouchStart = (e) => {
+        touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!touchStartRef.current) return;
+        const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+        const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (Math.max(absDx, absDy) > 50) {
+            if (absDy >= absDx) {
+                if (dy < 0) nextSlide(); else prevSlide();
+            } else {
+                if (dx < 0) nextSlide(); else prevSlide();
+            }
         }
-    }, [musicPlaying]);
+        touchStartRef.current = null;
+    };
 
-    // Gate screen — "Open your surprise!"
+    // Gate screen
     if (!entered) {
         return (
             <div className="gate-screen">
@@ -116,18 +99,72 @@ export default function CelebrationPage() {
     }
 
     return (
-        <div className="celebration-page">
+        <div
+            className="slide-container"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+        >
             <Confetti />
 
-            {/* Music toggle button */}
-            <button className="music-toggle" onClick={toggleMusic} title={musicPlaying ? 'Matikan Musik' : 'Putar Musik'}>
-                {musicPlaying ? '🔊' : '🔇'}
-            </button>
+            {/* Slides */}
+            <div className="slides-wrapper" style={{ transform: `translateY(-${currentSlide * 100}vh)` }}>
+                <div className="slide">
+                    <HeroSection />
+                </div>
+                <div className="slide">
+                    <MusicPlaylist />
+                </div>
+                <div className="slide">
+                    <BirthdayMessage />
+                </div>
+                <div className="slide">
+                    <WishesSection />
+                </div>
+                <div className="slide">
+                    <GiftPage />
+                </div>
+                <div className="slide">
+                    <Footer />
+                </div>
+            </div>
 
-            <HeroSection />
-            <BirthdayMessage />
-            <WishesSection />
-            <Footer />
+            {/* Navigation Arrows */}
+            {currentSlide > 0 && (
+                <button className="slide-arrow slide-arrow-up" onClick={prevSlide} aria-label="Previous Slide">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m18 15-6-6-6 6" />
+                    </svg>
+                </button>
+            )}
+            {currentSlide < totalSlides - 1 && (
+                <button className="slide-arrow slide-arrow-down" onClick={nextSlide} aria-label="Next Slide">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </button>
+            )}
+
+            {/* Dot Navigation */}
+            <div className="slide-dots">
+                {SLIDE_LABELS.map((label, i) => (
+                    <button
+                        key={i}
+                        className={`slide-dot ${i === currentSlide ? 'active' : ''}`}
+                        onClick={() => goToSlide(i)}
+                        aria-label={label}
+                        title={label}
+                    >
+                        <span className="slide-dot-inner" />
+                    </button>
+                ))}
+            </div>
+
+            {/* Slide Counter */}
+            <div className="slide-counter">
+                <span className="slide-counter-current">{String(currentSlide + 1).padStart(2, '0')}</span>
+                <span className="slide-counter-sep">/</span>
+                <span className="slide-counter-total">{String(totalSlides).padStart(2, '0')}</span>
+            </div>
         </div>
     );
 }
