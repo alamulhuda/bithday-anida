@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function getTimeLeft(targetDate) {
     const now = new Date();
@@ -43,6 +43,7 @@ function CountdownUnit({ value, label }) {
 
 export default function CountdownPage({ targetDate }) {
     const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
+    const pageRef = useRef(null);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -51,8 +52,21 @@ export default function CountdownPage({ targetDate }) {
         return () => clearInterval(timer);
     }, [targetDate]);
 
+    const handleMouseMove = (e) => {
+        if (!pageRef.current) return;
+        const rect = pageRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        pageRef.current.style.setProperty('--mouse-x', `${x}px`);
+        pageRef.current.style.setProperty('--mouse-y', `${y}px`);
+    };
+
     return (
-        <div className="countdown-page">
+        <div
+            className="countdown-page"
+            ref={pageRef}
+            onMouseMove={handleMouseMove}
+        >
             <div className="countdown-page-inner">
                 {/* Lock Icon */}
                 <div className="lock-icon">

@@ -728,11 +728,33 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.countdown-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* dynamic gradient based on mouse position, fallback to center */
+  background: radial-gradient(1000px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(212, 175, 55, 0.1), transparent 30%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+}
+
+.countdown-page:hover::before {
+  opacity: 1;
 }
 
 .countdown-page-inner {
   text-align: center;
   padding: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .lock-icon {
